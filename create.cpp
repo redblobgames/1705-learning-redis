@@ -30,13 +30,13 @@ void create_object() {
 
   G.emplace_back(gameobject{id, 0, 0, 0, 0});
   random_init(G.back());
-  int bid = block_id(G.back());
+  string bid = block_id(G.back());
 
   redis
     .multi()
     .set("obj:" + to_string(id), serialize(G.back()))
-    .sadd("block:" + to_string(bid), vector<string>{to_string(id)})
-    .publish("block_add:" + to_string(bid), to_string(id))
+    .sadd("block:" + bid, vector<string>{to_string(id)})
+    .publish("block_add:" + bid, to_string(id))
     .exec();
 }
 
@@ -44,7 +44,7 @@ void reset_db() {
   vector<string> keys_to_reset;
   redis.set("next_obj_id", "0");
   redis.del(vector<string>{"server:0"s});
-  redis.sadd("server:0", vector<string>{"0"s, "1"s, "2"s, "3"s});
+  redis.sadd("server:0", vector<string>{"0,0"s, "0,1"s, "1,0"s, "1,1"s});
   redis.keys("obj:*", [&](auto& reply) {
       for (auto& r : reply.as_array()) {
         keys_to_reset.push_back(r.as_string());

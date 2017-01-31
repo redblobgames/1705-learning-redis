@@ -15,9 +15,9 @@ void move_object(gameobject& g) {
 }
 
 void tick_object(gameobject& g) {
-  int old_block_id = block_id(g);
+  string old_block_id = block_id(g);
   move_object(g);
-  int new_block_id = block_id(g);
+  string new_block_id = block_id(g);
 
   if (old_block_id == new_block_id) {
     redis.set("obj:" + to_string(g.id), serialize(g));
@@ -25,11 +25,11 @@ void tick_object(gameobject& g) {
     redis
       .multi()
       .set("obj:" + to_string(g.id), serialize(g))
-      .smove("block:" + to_string(old_block_id),
-             "block:" + to_string(new_block_id),
+      .smove("block:" + old_block_id,
+             "block:" + new_block_id,
              to_string(g.id))
-      .publish("block_rem:" + to_string(old_block_id), to_string(g.id))
-      .publish("block_add:" + to_string(new_block_id), to_string(g.id))
+      .publish("block_rem:" + old_block_id, to_string(g.id))
+      .publish("block_add:" + new_block_id, to_string(g.id))
       .exec();
   }
 }

@@ -15,16 +15,16 @@ struct gameobject {
 
 std::vector<gameobject> G;
 
-int block_id(int x, int y) {
+std::string block_id(int x, int y) {
   if (!(0 <= x && x <= WORLDMAX)) throw "out of range";
   if (!(0 <= y && y <= WORLDMAX)) throw "out of range";
   int shift = WORLDBITS - BLOCKBITS;
   int LIMIT = 1 << BLOCKBITS;
   int bx = x >> shift, by = y >> shift;
-  return bx + by * LIMIT;
+  return std::to_string(bx) + "," + std::to_string(by);
 }
 
-int block_id(const gameobject& g) {
+std::string block_id(const gameobject& g) {
   return block_id(g.x, g.y);
 }
 
