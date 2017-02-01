@@ -10,10 +10,8 @@ const int BLOCKBITS = 1;  // 1<<BLOCKBITS blocks on a side in the world
 const int NUMBLOCKS = (1 << BLOCKBITS) * (1 << BLOCKBITS);
 
 struct gameobject {
-  int id, x, y, dx, dy;
+  int id, x, y, dx, dy, age;
 };
-
-std::vector<gameobject> G;
 
 std::string block_id(int x, int y) {
   if (!(0 <= x && x <= WORLDMAX)) throw "out of range";
@@ -31,13 +29,13 @@ std::string block_id(const gameobject& g) {
 
 std::string serialize(const gameobject& g) {
   std::stringstream stream;
-  stream << g.id << ' ' << g.x << ' ' << g.y << ' ' << g.dx << ' ' << g.dy << ' ' << block_id(g);
+  stream << g.id << ' ' << g.x << ' ' << g.y << ' ' << g.dx << ' ' << g.dy << ' ' << g.age << ' ' << block_id(g);
   return stream.str();
 }
 
 void deserialize(gameobject& g, const std::string& s) {
   std::stringstream stream(s);
-  stream >> g.id >> g.x >> g.y >> g.dx >> g.dy;
+  stream >> g.id >> g.x >> g.y >> g.dx >> g.dy >> g.age;
 }
 
 #endif

@@ -2,7 +2,7 @@
 #include <iostream>
 #include "gameobject.h"
 
-const int NUM_OBJECTS = 3;
+const int NUM_OBJECTS = 10;
 
 using namespace cpp_redis;
 using namespace std;
@@ -28,13 +28,15 @@ void create_object() {
   // Can't do anything else until we've gotten the id
   redis.sync_commit();
 
-  G.emplace_back(gameobject{id, 0, 0, 0, 0});
-  random_init(G.back());
-  string bid = block_id(G.back());
+  gameobject obj;
+  obj.id = id;
+  obj.age = 0;
+  random_init(obj);
+  string bid = block_id(obj);
 
   redis
     .multi()
-    .set("obj:" + to_string(id), serialize(G.back()))
+    .set("obj:" + to_string(id), serialize(obj))
     .sadd("block:" + bid, vector<string>{to_string(id)})
     .publish("block_add:" + bid, to_string(id))
     .exec();
@@ -44,7 +46,8 @@ void reset_db() {
   vector<string> keys_to_reset;
   redis.set("next_obj_id", "0");
   redis.del(vector<string>{"server:0"s});
-  redis.sadd("server:0", vector<string>{"0,0"s, "0,1"s, "1,0"s, "1,1"s});
+  redis.sadd("server:0", vector<string>{"0,0"s, "0,1"s});
+  redis.sadd("server:1", vector<string>{"1,0"s, "1,1"s});
   redis.keys("obj:*", [&](auto& reply) {
       for (auto& r : reply.as_array()) {
         keys_to_reset.push_back(r.as_string());
