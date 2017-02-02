@@ -2,7 +2,14 @@
 
 #+begin_src sh
 make
-bin/create
-bin/simulate 0
 #+end_src
 
+* Running
+
+Run ~bin/create~ to *erase all data in redis* and build a new game database.
+
+In one window run ~bin/simulate A~ and in another window run ~bin/simulate B~. The two simulation servers will wait for each other automatically.
+
+NOTE: this will fill up your redis instance with the state from every simulation tick. It doesn't currently erase the old state.
+
+Reduce ~redis-cli monitor~ if you want to see all the commands, but it's pretty noisy. Reduce =NUM_OBJECTS= in create.cpp to 3 and =TICKS_PER_SECOND= in simulate.cpp to 1 first.
