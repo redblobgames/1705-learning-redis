@@ -1,16 +1,6 @@
 * Install
 
-This should go into the =Makefile=:
-
 #+begin_src sh
-git submodule update --init --recursive
-cd cpp_redis
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=../../deps ..
-make install
-make clean
-cd ../..
 make
 bin/create
 bin/simulate 0
