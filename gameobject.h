@@ -1,7 +1,16 @@
+/* Game objects
+ * 
+ * Copyright 2017 Red Blob Games <redblobgames@gmail.com>
+ * License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
+ *
+ * Minimal game object definition. Each object lives in a game world
+ * dividied into blocks.
+ *
+ */
+
 #ifndef GAMEOBJECT_H
 #define GAMEOBJECT_H
 
-#include <vector>
 #include <sstream>
 
 const int WORLDBITS = 10; // 1<<WORLDBITS tiles on a side in the world

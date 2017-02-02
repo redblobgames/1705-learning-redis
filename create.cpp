@@ -1,14 +1,29 @@
+/* Game database creation
+ * 
+ * Copyright 2017 Red Blob Games <redblobgames@gmail.com>
+ * License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
+ *
+ */
+
+
 #include <cpp_redis/cpp_redis>
-#include <iostream>
 #include "gameobject.h"
+
+#include <iostream>
+using std::cout;
+
+#include <string>
+using namespace std::literals;
+using std::string; using std::to_string;
+
+#include <vector>
+using std::vector;
+
 
 const int NUM_OBJECTS = 1000;
 int next_obj_id = 0; // In this test, only create.cpp creates objects
 
-using namespace cpp_redis;
-using namespace std;
-
-redis_client redis;
+cpp_redis::redis_client redis;
 
 int randint(int lo, int hi) {
   return random() % (hi-lo+1) + lo;
@@ -39,8 +54,8 @@ void reset_db() {
   redis.sync_commit();
   
   // Two-server partitioning for now
-  redis.sadd("server:A:0", vector<string>{"0,0"s, "0,1"s});
-  redis.sadd("server:B:0", vector<string>{"1,0"s, "1,1"s});
+  redis.sadd("server:A:0", {"0,0"s, "0,1"s});
+  redis.sadd("server:B:0", {"1,0"s, "1,1"s});
 }
 
 int main() {

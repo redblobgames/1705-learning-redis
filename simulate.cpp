@@ -1,20 +1,35 @@
+/* Simulation server
+ * 
+ * Copyright 2017 Red Blob Games <redblobgames@gmail.com>
+ * License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
+ *
+ * Game simulation for a single server shard, using redis to store
+ * game state. Runs in a "functional" style, reading from one set of
+ * redis keys and writing to a different set of redis keys.
+ *
+ */
+
 #include <cpp_redis/cpp_redis>
-#include <unordered_set>
-#include <unordered_map>
-#include <iostream>
-#include <sstream>
+#include <utility>
 #include <unistd.h>
 #include "gameobject.h"
 
-#include <thread>
-#define THR std::this_thread::get_id()
+#include <iostream>
+using std::cout;
 
-using namespace cpp_redis;
-using namespace std;
+#include <unordered_set>
+using std::unordered_set;
+
+#include <vector>
+using std::vector;
+
+#include <string>
+using std::string; using std::to_string;
+
 
 int tick = 0;
 const int TICKS_PER_SECOND = 60;
-redis_client redis;
+cpp_redis::redis_client redis;
 
 void tick_object(gameobject& g) {
   ++g.age;
@@ -32,7 +47,7 @@ struct Block {
     vector<int> object_ids;
     vector<gameobject> gameobjects;
     
-    redis.smembers("block:"s + block_id + ":"s + to_string(tick), [&](auto& reply) {
+    redis.smembers("block:" + block_id + ":" + to_string(tick), [&](auto& reply) {
         for (auto& r : reply.as_array()) {
           object_ids.push_back(stoi(r.as_string()));
         }
@@ -44,7 +59,7 @@ struct Block {
       vector<string> keys;
       transform(object_ids.begin(), object_ids.end(),
                 back_inserter(keys),
-                [](int id) { return "obj:"s + to_string(id) + ":" + to_string(tick); });
+                [](int id) { return "obj:" + to_string(id) + ":" + to_string(tick); });
       redis.mget(keys, [&](auto& reply) {
           for (auto& r : reply.as_array()) {
             gameobjects.emplace_back();
@@ -58,10 +73,10 @@ struct Block {
         tick_object(g);
       }
 
-      vector<pair<string, string>> outputs;
+      vector<std::pair<string, string>> outputs;
       transform(gameobjects.begin(), gameobjects.end(),
                 back_inserter(outputs),
-                [](const gameobject& g) { return make_pair("obj:"s + to_string(g.id) + ":" + to_string(tick+1), serialize(g)); });
+                [](const gameobject& g) { return std::make_pair("obj:" + to_string(g.id) + ":" + to_string(tick+1), serialize(g)); });
       redis.mset(outputs);
 
       // TODO: this could be a batch operation
@@ -71,9 +86,7 @@ struct Block {
 
     }
     
-    redis.sadd("finished:" + to_string(tick), {block_id}, [&](auto& reply) {
-        cout << "SADD finished:" << tick << " " << block_id << endl;
-      });
+    redis.sadd("finished:" + to_string(tick), {block_id});
   }
   
   ~Block() {
@@ -86,7 +99,7 @@ struct Block {
 int main(int argc, char* argv[]) {
   redis.connect("127.0.0.1", 6379);
 
-  string server_id = "A"s;
+  string server_id = "A";
   if (argc > 1) {
     server_id = string(argv[1]);
   }
@@ -129,7 +142,7 @@ int main(int argc, char* argv[]) {
 
     // Wait for next tick
     frame_time_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
-    usleep(max(1, 1000000/TICKS_PER_SECOND - frame_time_microseconds));
+    usleep(std::max(1, 1000000/TICKS_PER_SECOND - frame_time_microseconds));
 
     cout << "(" << frame_time_microseconds << ") ";
     ++tick;
