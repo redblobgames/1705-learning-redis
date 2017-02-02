@@ -2,7 +2,8 @@
 #include <iostream>
 #include "gameobject.h"
 
-const int NUM_OBJECTS = 10;
+const int NUM_OBJECTS = 1000;
+int next_obj_id = 0; // In this test, only create.cpp creates objects
 
 using namespace cpp_redis;
 using namespace std;
@@ -21,47 +22,25 @@ void random_init(gameobject& g) {
 }
 
 void create_object() {
-  int id = -1;
-  redis.incr("next_obj_id", [&](auto& reply) {
-      id = reply.as_integer();
-    });
-  // Can't do anything else until we've gotten the id
-  redis.sync_commit();
+  int id = ++next_obj_id;
 
   gameobject obj;
   obj.id = id;
   obj.age = 0;
   random_init(obj);
-  string bid = block_id(obj);
 
   redis
-    .multi()
-    .set("obj:" + to_string(id), serialize(obj))
-    .sadd("block:" + bid, vector<string>{to_string(id)})
-    .publish("block_add:" + bid, to_string(id))
-    .exec();
+    .set("obj:" + to_string(id) + ":0", serialize(obj))
+    .sadd("block:" + obj.block_id() + ":0", vector<string>{to_string(id)});
 }
 
 void reset_db() {
-  vector<string> keys_to_reset;
-  redis.set("next_obj_id", "0");
-  redis.del(vector<string>{"server:0"s});
-  redis.sadd("server:0", vector<string>{"0,0"s, "0,1"s});
-  redis.sadd("server:1", vector<string>{"1,0"s, "1,1"s});
-  redis.keys("obj:*", [&](auto& reply) {
-      for (auto& r : reply.as_array()) {
-        keys_to_reset.push_back(r.as_string());
-      }
-    });
-  redis.keys("block:*", [&](auto& reply) {
-      for (auto& r : reply.as_array()) {
-        keys_to_reset.push_back(r.as_string());
-      }
-    });
-  // NOTE: we need to wait for all the queries to come back before
-  // keys_to_reset has been built
+  redis.flushall();
   redis.sync_commit();
-  redis.del(keys_to_reset);
+  
+  // Two-server partitioning for now
+  redis.sadd("server:A:0", vector<string>{"0,0"s, "0,1"s});
+  redis.sadd("server:B:0", vector<string>{"1,0"s, "1,1"s});
 }
 
 int main() {

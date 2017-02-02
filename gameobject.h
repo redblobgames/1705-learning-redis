@@ -11,25 +11,21 @@ const int NUMBLOCKS = (1 << BLOCKBITS) * (1 << BLOCKBITS);
 
 struct gameobject {
   int id, x, y, dx, dy, age;
+
+  std::string block_id() {
+    if (!(0 <= x && x <= WORLDMAX)) throw "out of range";
+    if (!(0 <= y && y <= WORLDMAX)) throw "out of range";
+    int shift = WORLDBITS - BLOCKBITS;
+    int LIMIT = 1 << BLOCKBITS;
+    int bx = x >> shift, by = y >> shift;
+    return std::to_string(bx) + "," + std::to_string(by);
+  }
 };
-
-std::string block_id(int x, int y) {
-  if (!(0 <= x && x <= WORLDMAX)) throw "out of range";
-  if (!(0 <= y && y <= WORLDMAX)) throw "out of range";
-  int shift = WORLDBITS - BLOCKBITS;
-  int LIMIT = 1 << BLOCKBITS;
-  int bx = x >> shift, by = y >> shift;
-  return std::to_string(bx) + "," + std::to_string(by);
-}
-
-std::string block_id(const gameobject& g) {
-  return block_id(g.x, g.y);
-}
 
 
 std::string serialize(const gameobject& g) {
   std::stringstream stream;
-  stream << g.id << ' ' << g.x << ' ' << g.y << ' ' << g.dx << ' ' << g.dy << ' ' << g.age << ' ' << block_id(g);
+  stream << g.id << ' ' << g.x << ' ' << g.y << ' ' << g.dx << ' ' << g.dy << ' ' << g.age;
   return stream.str();
 }
 

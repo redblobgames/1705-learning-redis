@@ -8,6 +8,7 @@ bin/%: %.cpp gameobject.h $(CPP_REDIS_LIB) Makefile
 
 $(CPP_REDIS_LIB):
 	git submodule update --init --recursive
+	cd cpp_redis && git checkout 9dfb144
 	mkdir -p cpp_redis/build
 	cd cpp_redis/build \
 		&& cmake -DCMAKE_INSTALL_PREFIX=../../deps -DREAD_SIZE=65536 -DIO_SERVICE_NB_WORKERS=1 .. \
