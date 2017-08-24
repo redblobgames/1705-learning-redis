@@ -1,3 +1,5 @@
+[[http://unmaintained.tech/][http://unmaintained.tech/badge.svg]]
+
 * Install
 
 #+begin_src sh
